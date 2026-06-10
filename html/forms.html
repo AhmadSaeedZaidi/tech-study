@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>idk yet</title>
+</head>
+<body>
+    <div>
+    <h1>html form</h1>
+    <form action="">
+        <label for="name">enter your name:</label>
+        <input type="text" id="name" name="username" placeholder="Your full name" required>
+        <br>
+        <label for="email">enter your email:</label>
+        <input type="email" id="email" name="email" placeholder="you@example.com" required>
+        <br>
+        <label for="password">enter your password:</label>
+        <input type="password" id="password" name="password" placeholder="Minimum 8 characters" required>
+        <br>
+        <p>select your age:</p>
+        <input type="radio" name="age" value="0-25" id="option-1" required>
+        <label for="option-1">0-25</label>
+        <input type="radio" name="age" value="26-50" id="option-1">
+        <label for="option-2">26-50</label>
+        <input type="radio" name="age" value="51+" id="option-1">
+        <label for="option-2">51+</label>
+
+        <br><br>
+
+        <label for="">Security questions</label>
+        <select name="question" id="question" required> 
+            <option value="q1">What is your Quest?</option>
+            <option value="q2">What is your favourite colour?</option>
+            <option value="q3">What is the air speed velocity of an unladen swallow?</option>
+            <option value="q4">African or European swallow?</option>
+        </select>
+
+        <br><br>
+
+        <label for="answer">Security Question Answer</label>
+        <input type="text" name="answer" id="answer" placeholder="Answer to selected question" required>
+    
+        <br><br>
+        <label for="bio">Your Bio:</label>
+        <br>
+        <textarea name="bio" id="bio" cols="30" rows="10" placeholder="about you..."></textarea>
+        <br><br>
+        <input type="submit" value="submit the form">
+    </form>
+    </div>
+</body>
+</html>
