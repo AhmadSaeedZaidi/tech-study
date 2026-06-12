@@ -1,0 +1,18 @@
+# useful chrome tool features
+- ### inspect element
+  - right click on any element and select "inspect" to open the developer tools and inspect the element. this is useful for debugging and testing css and html.
+- ### console
+  - the console is a powerful tool for debugging and testing javascript. it can be opened by
+- ### lighthouse
+  - lighthouse is a tool that can be used to audit a website for performance, accessibility, best practices, and seo. it can be opened by clicking on the "lighthouse" tab in the developer tools. it can also be run from the command line using the lighthouse cli.
+- ### scroll into view
+  - the scroll into view feature allows you to scroll to a specific element on the page. this is useful for testing and debugging. it can be accessed by right clicking on an element in the elements panel and selecting "scroll into view".
+- ### hide element
+  - the hide element feature allows you to hide an element on the page. this is useful for testing and debugging. it can be accessed by right clicking on an element in the elements panel and selecting "hide element".
+- ### styles tab
+  - the styles tab allows you to view and edit the css styles of an element. this is useful for testing and debugging. it can be accessed by clicking on an element in the elements panel and selecting the "styles" tab. you can check and uncheck styles, and hovering over code in the styles tab will show you which element it is affecting on the page. you can also edit the styles directly in the styles tab and see the changes in real time on the page.
+- ### sources 
+    - the sources tab allows you to view and edit the code live on chrome. but refreshing will obviously remove the edits, so make sure to copy it over to your code-editor.
+    - note: you can add files to the workspace, and allow edits, and you can actually edit in chrome
+- ### device toolbar
+    - the device toolbar allows you to test your website on different screen sizes and devices. it can be accessed by clicking on the "toggle device toolbar" button in the developer tools, or by pressing ctrl + shift + m. you can select different devices from the dropdown menu, or you can enter custom dimensions. this is useful for testing and debugging responsive design.
