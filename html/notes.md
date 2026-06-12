@@ -84,3 +84,29 @@ padding does not collapse, it adds to the size of the element. so if an element 
 padding works in all directions for inline elements, but it collapses vertically.
 
 margins don't work vertically for inline elements.
+
+### inline-block elements:
+`display: inline-block`
+this allows the element to behave as inline, but padding and margins behave like block  elements. this is very useful for styling inline elements. 
+
+# classes in css/html
+you can assign a class to an element, to identify it when styling. you can add multiple classes to an element, for further control over the styling.
+this can be done by class="class1 class2 class3"
+refer to [class styling](../css/classes.css) for examples on how to style classes.
+
+## descendant selectors
+basically, `section .error {}`, finds all elements with class "error" inside section tag, and styles them. very useful. also works with nested tags, `section div {}` finds divs inside sections. 
+
+## cascading behaviour (kind of obvious)
+styling has a hierarchy.
+- **inherited styles:** some styles are inherited from the parent element, like font-family, color etc. if a child element does not have a specific style for a property, it will inherit it from the parent.
+- **specificity:** if there are multiple styles that apply to an element, the one with the highest specificity will be applied. specificity is calculated based on the type of selector used. for example, an id selector has a higher specificity than a class selector, which has a higher specificity than a tag selector.
+
+```css
+#id > .class > tag
+```
+- **source order:** if there are multiple styles with the same specificity, the one that is defined last in the stylesheet will be applied. this is because the styles are applied in the order they are defined, and the last one will override the previous ones.
+
+## href
+cool stuff, look at classes.css, but basically you can style SPECIFICALLY the anchor with a certain link. `a[href="link"] {}` or `a[href*="part of link"]{}`
+you can use all the regex rules, like $ for end of link, ^ for start of link, * for anywhere in the link. 

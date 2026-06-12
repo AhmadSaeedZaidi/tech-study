@@ -1,0 +1,40 @@
+.success {
+    color: green;
+}
+
+/* .class affects whole class, div.class affects only divs with that class for example. */
+.error {
+    color: red;
+}
+
+.success.feedback {
+    border: 1px dashed black;
+}
+
+p.success {
+    color: rgb(13, 122, 141)
+}
+
+/* can also use id, but id is unique to one element per page. */
+
+#paragraph-2-body {
+    color: orange
+}
+
+section p {
+    color: slategray;
+}
+
+/* section .error and section.error are not the same uncomment below to see the difference*/
+
+/* section.error {
+    color: red;
+}
+section .error {
+    color: purple;
+} */
+
+a[href*="google"] {
+    color: white;
+    background-color: black;
+}
