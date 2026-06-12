@@ -50,7 +50,7 @@ eg. "color: red", "font-size: 20px" etc, the actual styling we want to apply to 
 this sets h1 tags to orange, and p tags to red in the document.
 
 ## stylesheet
-as in the [stylesheet](../css/style.css) file, we can put the css in a separate file and link it in the head of the html document, using the link tag. this is better for organization and reusability.
+as in the [stylesheet](css/style.css) file, we can put the css in a separate file and link it in the head of the html document, using the link tag. this is better for organization and reusability.
 
 ## font-size:
 ### rem:
@@ -106,7 +106,14 @@ styling has a hierarchy.
 #id > .class > tag
 ```
 - **source order:** if there are multiple styles with the same specificity, the one that is defined last in the stylesheet will be applied. this is because the styles are applied in the order they are defined, and the last one will override the previous ones.
+### exceptions:
+- Non-inherited properties: Layout properties like margin, padding, border, and background are not inherited by child elements.
+- Forced inheritance: Use `inherit` to make a child adopt a parent's value for a non-inheriting property (e.g., `border: inherit`).
+- Specificity conflicts: More specific selectors win over less specific ones, even if the less specific rule appears later.
 
 ## href
 cool stuff, look at classes.css, but basically you can style SPECIFICALLY the anchor with a certain link. `a[href="link"] {}` or `a[href*="part of link"]{}`
 you can use all the regex rules, like $ for end of link, ^ for start of link, * for anywhere in the link. 
+
+
+
