@@ -1,3 +1,11 @@
+/* reset, basically making some default values at the start, before formatting later */
+
+body, ul, li, h1, h2, a {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
 header {
   background-color: #f63232;
   padding: 20px;
@@ -55,7 +63,7 @@ nav {
   background-color: #f4f4f4;
   padding: 20px;
   position: sticky;
-  top: 160px;
+  top: 106px;
 }
 
 nav ul {
@@ -77,5 +85,55 @@ nav li a {
 
 nav li a.join {
   color: #f63232;
+}
 
+main {
+  max-width: 100%;
+  width: 1200px;
+  margin: 80px auto;
+  padding: 0 40px;
+  /* this says, incorporate the padding into the max width */
+  box-sizing: border-box;
+}
+
+article h2 {
+  color: #f63232;
+  font-size: 48px;
+}
+
+/* as discussed before, 2 times default font size */
+article p {
+  line-height: 2em;
+}
+.images {
+  text-align: center;
+  margin: 80px 0;
+  white-space: nowrap;
+}
+.images li {
+  display: inline-block;
+  width: 40%;;
+}
+
+.images li img {
+  max-width: 100%;
+}
+
+section.join {
+  background-color: #f4f4f4;
+  text-align: center;
+  padding: 60px 20px;
+  color: #4b4b4b;
+}
+section.join h2 {
+  font-size: 36px;
+
+}
+
+form input {
+  margin: 20px 0px;
+  padding: 10px 20px;
+  font-size: 24px;
+  border-radius: 28px;
+  border: 4px solid white;
 }
