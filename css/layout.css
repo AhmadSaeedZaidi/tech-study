@@ -1,0 +1,81 @@
+header {
+  background-color: #f63232;
+  padding: 20px;
+  text-align: center;
+  position: fixed;
+  width: 100%;
+  /* zed index! everything has z index of 0, but you can move things forward or backward by changing it. */
+  z-index: 1;
+
+}
+
+header h1 {
+  color: white;
+  border: 8px solid white;
+  padding: 6px 12px;
+  /* first vlaue is vertical padding, second is horizontal */
+  display: inline-block;
+  border-radius: 36px;
+}
+/* relative position, banner sits 200 px below it's default pos */
+/* .banner {
+  position: relative;
+  top: 200px;
+} */
+
+.banner {
+  position: relative;
+}
+
+.banner img {
+  max-width: 100%;
+}
+
+/* note: abs position sits on top of other elements */
+.banner .welcome {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  background-color: #feb614;
+  padding: 30px;
+  color: white;
+}
+
+.banner h2 {
+  font-size: 74px
+}
+
+.banner h2 span {
+  font-size: 1.3em;
+}
+
+/* fixed position: */
+
+nav {
+  background-color: #f4f4f4;
+  padding: 20px;
+  position: sticky;
+  top: 160px;
+}
+
+nav ul {
+  white-space: nowrap;
+  max-width: 1200px;
+  padding: 0 auto;
+}
+
+nav li {
+  width: 25%;
+  display: inline-block;
+  font-size: 24px; 
+}
+
+nav li a {
+  text-decoration: none;
+  color: #4b4b4b4b;
+}
+
+nav li a.join {
+  color: #f63232;
+
+}
