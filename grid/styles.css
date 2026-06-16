@@ -1,0 +1,22 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: repeat(2,100px);
+    grid-auto-rows: 150px; 
+    grid-template-rows: minmax(150px, auto);
+    grid-gap: 20px;
+    grid-template-areas: 
+        "header header"
+        "sidebar content"
+        "sidebar content";
+}
+
+.grid-item-1 {
+    grid-area: header;
+}
+
+.grid-item-2 {
+    grid-area: content;
+}
+.grid-item-3 {
+    grid-area: sidebar;
+}
