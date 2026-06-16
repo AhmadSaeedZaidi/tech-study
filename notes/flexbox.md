@@ -19,3 +19,11 @@ things wrap in the reverse order. right-most element will go on the top, and son
 ### nowrap
 default behaviour, no wrap.
 
+## flex-basis
+better version of min-width.Element still wraps into vertical stacking when viewport is smaller, but the element also scales when the viewport is too small, and keeps a minimum size when the viewport is sufficiently large. Further responsiveness.
+
+## flex proprty
+everything above can be combined into a single property, with the syntax: 
+```css
+flex: <flex-grow> <flex-shrink> <flex-basis>
+```
