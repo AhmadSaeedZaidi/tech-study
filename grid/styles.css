@@ -4,19 +4,26 @@
     grid-auto-rows: 150px; 
     grid-template-rows: minmax(150px, auto);
     grid-gap: 20px;
-    grid-template-areas: 
+    /* grid-template-areas: 
         "header header"
         "sidebar content"
-        "sidebar content";
+        "sidebar content"; */
+    justify-content: center;
+    align-content: center;
 }
 
 .grid-item-1 {
-    grid-area: header;
+    /* grid-column: 1 / -1; shorthand for column goes from 1 to last column */
+    /* grid-column-start: 1;
+    grid-column-end: 3 or -1; */
+
+    /* grid-area: header ; */
 }
 
+/* 
 .grid-item-2 {
-    grid-area: content;
+    grid-row: span 2;
 }
 .grid-item-3 {
-    grid-area: sidebar;
-}
+    grid-row: span 3;
+} */

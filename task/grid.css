@@ -1,0 +1,105 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Verdana', sans-serif;
+}
+
+::selection {
+    background-color: #2ecc71;
+    color: white;
+}
+
+/* Entire page layout using Grid */
+.page-grid {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+}
+
+/* Header using Grid for alignment */
+.main-header {
+    display: grid;
+    place-content: center;
+    text-align: center;
+    background-color: #1a2a3a;
+    color: white;
+    padding: 40px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.main-header h1 {
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+/* Main content grid */
+.content-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    padding: 40px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    display: grid;
+    align-content: start;
+    gap: 15px;
+}
+
+.card h2 {
+    color: #1a2a3a;
+    border-bottom: 2px solid #2ecc71;
+    justify-self: start;
+}
+
+/* List inside card using Grid */
+.grid-list {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.grid-list li {
+    background-color: #f9f9f9;
+    padding: 8px 12px;
+    border-left: 4px solid #2ecc71;
+}
+
+.btn {
+    display: grid;
+    place-items: center;
+    background-color: #2ecc71;
+    color: white;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    justify-self: start;
+}
+
+/* Footer using Grid */
+.main-footer {
+    display: grid;
+    place-items: center;
+    background-color: #1a2a3a;
+    color: white;
+    padding: 25px;
+}
+
+@media (max-width: 600px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+        padding: 20px 15px;
+    }
+}
