@@ -2,6 +2,7 @@
 Js is a scripting language, that allows us to implement complex features on web pages.
 i'll be using [mozilla dev network docs](https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting)
 as well as [hitesh chai aur javascript](https://www.youtube.com/playlist?list=PLu71SKxNbfoBuX3f4EOACle2y-tRC5Q37)
+and lastly, the ecma specificiation [ecma](https://tc39.es/ecma262/)
 
 ## example script with explanation:
 ```js
