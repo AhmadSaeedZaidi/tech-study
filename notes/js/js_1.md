@@ -268,3 +268,219 @@ Number.MAX_SAFE_INTEGER
 
 `Number.MAX_SAFE_INTEGER` is especially important because numbers beyond that can lose precision.
 
+conceptually, `MAX_VALUE` behaves like max float, while `MAX_SAFE_INTEGER` behaves like max int.
+
+## Math library:
+`Math` is a built-in object that gives you common math constants and functions.
+it is very useful for rounding, limits, and random number generation.
+
+### Math.abs(value)
+returns the absolute value of a number.
+negative numbers become positive.
+
+```javascript
+Math.abs(-4) // 4
+Math.abs(7) // 7
+```
+
+### Math.round(value)
+rounds to the nearest integer.
+values at `.5` and above go up.
+
+```javascript
+Math.round(4.2) // 4
+Math.round(4.6) // 5
+```
+
+### Math.ceil(value)
+always rounds up to the next highest integer.
+even if the decimal part is tiny, it still goes up.
+
+```javascript
+Math.ceil(4.1) // 5
+Math.ceil(4.9) // 5
+```
+
+### Math.floor(value)
+always rounds down to the next lowest integer.
+very useful when you want to discard decimal parts.
+
+```javascript
+Math.floor(4.9) // 4
+Math.floor(4.1) // 4
+```
+
+### Math.sqrt(value)
+returns the square root of a number.
+
+```javascript
+Math.sqrt(16) // 4
+```
+
+### Math.pow(base, exponent)
+returns the result of base raised to the exponent.
+
+```javascript
+Math.pow(2, 3) // 8
+```
+
+### Math.min(...values) and Math.max(...values)
+find the smallest and largest values from a list of numbers.
+they work well with multiple arguments.
+
+```javascript
+Math.min(3, 8, 1, 9) // 1
+Math.max(3, 8, 1, 9) // 9
+```
+interesting thing is that, you don't need to pass an array, you need to pass values as separate arguments. if you have an array, you can use the spread operator to pass it.
+for example:
+```javascript
+let arr = [3, 8, 1, 9]
+Math.min(...arr) // 1
+Math.max(...arr) // 9
+```
+and if you passed an empty array, it would return `Infinity` and `-Infinity` respectively.
+
+
+### Math.random()
+generates a random decimal between 0 (inclusive) and 1 (exclusive).
+it is the base for most random number logic in JavaScript.
+
+```javascript
+Math.random() // 0.742381...
+```
+
+### random number in a range
+to generate a random integer between `min` and `max`, use this formula:
+
+```javascript
+Math.floor(Math.random() * (max - min + 1)) + min
+```
+
+this is the standard approach for dice rolls, games, and other range-based random values.
+
+```javascript
+let min = 1
+let max = 6
+Math.floor(Math.random() * (max - min + 1)) + min // random dice roll
+```
+
+
+it works similar to the rand() function in C/C++, but with a different range and scaling. in C/C++, rand() returns a number between 0 and RAND_MAX, while in JS, Math.random() returns a decimal between 0 and 1.
+
+## Date and Time (Using Temporal Objects):
+Note: The video tutorial mentions that the `Date` object is outdated and recommends using the `Temporal` API, which is a new proposal for handling dates and times in JavaScript. Since I am watching the video in 2026, when temporal has been added to JS via Node.js 26, I will include both the `Date` object and the `Temporal` API for completeness.
+
+JS has a built-in `Date` object that allows you to work with dates and times. You can create a new date object using the `new Date()` constructor.
+
+```javascript
+let now = new Date() // current date and time
+let specificDate = new Date("2024-06-15T12:00:00Z") // specific date and time
+```
+
+### epoch
+The epoch is the point in time from which a computer measures time. In JavaScript, the epoch is January 1, 1970, 00:00:00 UTC. 
+
+## Date vs Temporal:
+`Date` is the old way of handling dates and times in JavaScript.
+`Temporal` is the modern standard, and it solves a lot of the weird behavior that `Date` had.
+
+### main idea
+`Date` objects are mutable, which means methods can change the same instance.
+`Temporal` objects are immutable, so every operation returns a new object.
+
+```javascript
+let oldDate = new Date()
+oldDate.setDate(oldDate.getDate() + 1) // changes the same object
+
+let plainDate = Temporal.PlainDate.from("2026-07-12")
+let nextDay = plainDate.add({ days: 1 }) // returns a new object
+```
+
+### date types
+the old `Date` object tried to do everything at once: date, time, and time zone.
+`Temporal` splits that into specific types, which is easier to reason about.
+
+```javascript
+Temporal.Now // current system time helpers
+Temporal.PlainDate // date without time
+Temporal.PlainTime // time without date
+Temporal.ZonedDateTime // date and time with time zone
+```
+
+### month indexing
+`Date` uses 0-based months, so January is `0` and December is `11`.
+`Temporal` uses normal human-readable months, so January is `1` and December is `12`.
+
+```javascript
+new Date(2026, 0, 12) // January 12, 2026
+Temporal.PlainDate.from({ year: 2026, month: 1, day: 12 })
+```
+
+### timestamps and math
+with `Date`, you often do manual math on milliseconds.
+with `Temporal`, you can compare dates directly and get duration objects without doing raw millisecond arithmetic.
+
+```javascript
+Date.now() // milliseconds since epoch
+
+Temporal.PlainDate.compare(
+	Temporal.PlainDate.from("2026-07-12"),
+	Temporal.PlainDate.from("2026-07-13")
+) // -1
+```
+
+```javascript
+let start = Temporal.PlainDate.from("2026-07-12")
+let end = Temporal.PlainDate.from("2026-07-15")
+start.until(end) // duration of 3 days
+```
+
+### when to use what
+use `Date` only when you need legacy compatibility.
+use `Temporal` for new code, because it is clearer and avoids many of the old date bugs.
+
+### legacy output methods vs modern formatting
+the old `Date` object has methods like `.toDateString()`, `.toISOString()`, `.toLocaleDateString()`, and `.toJSON()`.
+with `Temporal`, the better pattern is to keep the data object separate from formatting and use `Intl.DateTimeFormat` when you want a string for display.
+
+#### .toDateString()
+in the old api, this gave a human-readable date string.
+with `Temporal`, you format `Temporal.PlainDate` or `Temporal.ZonedDateTime` using `Intl.DateTimeFormat`.
+
+```javascript
+let date = Temporal.PlainDate.from("2026-07-12")
+let formatter = new Intl.DateTimeFormat("en-US", { dateStyle: "full" })
+formatter.format(date) // depends on environment and locale support
+```
+
+the main idea is that the date object holds the data, and `Intl` handles how it looks.
+
+#### .toISOString()
+the legacy `Date.toISOString()` always returned a UTC ISO string.
+in `Temporal`, `.toString()` gives ISO 8601 style output by default, and it keeps offsets and time zones clearer.
+
+```javascript
+let instant = Temporal.Now.instant()
+instant.toString() // ISO string
+```
+
+#### .toLocaleDateString()
+instead of relying on a `Date` prototype method, use `Intl.DateTimeFormat(...).format(...)` with `Temporal` values.
+this is usually more predictable and gives you more control over locale and options.
+
+```javascript
+let zonedDateTime = Temporal.Now.zonedDateTimeISO("UTC")
+new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(zonedDateTime)
+```
+
+#### .toJSON()
+`Temporal` types are designed to serialize cleanly to ISO strings.
+this makes `JSON.stringify()` behave in a more predictable way for date and time data.
+
+```javascript
+let plainDate = Temporal.PlainDate.from("2026-07-12")
+JSON.stringify({ plainDate })
+```
+
+the general rule is simple: use `Temporal` for date/time data, and use `Intl` for presentation.
