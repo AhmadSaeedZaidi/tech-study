@@ -630,7 +630,7 @@ if the response is an array, you usually loop through it to work with each objec
 ### api data inspection
 
 when the api response is complex, it helps to format it first using a json formatter.
-that makes it easier to see whether you are dealing with an object or an array of objects.
+that makes it easier to see whether you are dealing with an object or an array of objects. (tree structure is nice).
 
 ### important note
 
