@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guess the Number</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="main-header">
+        <h1>Guess the Number</h1>
+        <p>I'm thinking of a number between 1 and 100</p>
+    </header>
+
+    <main class="content">
+        <section class="card">
+            <form id="guess-form">
+                <input type="number" id="guessField" placeholder="Enter a number (1-100)" min="1" max="100">
+                <button type="submit" class="btn">Submit Guess</button>
+            </form>
+
+            <div class="info">
+                <p id="attempts">Attempts left: 10</p>
+                <p id="guesses">Previous guesses: none</p>
+                <p id="lowOrHi"></p>
+            </div>
+            <div id="result"></div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <p>&copy; 2026 Ahmad Saeed Zaidi</p>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

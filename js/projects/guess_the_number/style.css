@@ -1,0 +1,133 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Verdana', sans-serif;
+}
+
+::selection {
+    background-color: #2ecc71;
+    color: white;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f4f7f6;
+}
+
+.main-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #1a2a3a;
+    color: white;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.main-header h1 {
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+}
+
+.content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    flex: 1;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    max-width: 450px;
+    width: 100%;
+}
+
+#guess-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#guessField {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+#guessField:disabled {
+    background-color: #eee;
+    cursor: not-allowed;
+}
+
+.btn {
+    background-color: #2ecc71;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.btn:hover {
+    background-color: #27ae60;
+}
+
+.info {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #1a2a3a;
+}
+
+#lowOrHi {
+    font-weight: bold;
+    color: #e67e22;
+}
+
+#result {
+    margin-top: 15px;
+}
+
+.new-game-btn {
+    margin-top: 10px;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    cursor: pointer;
+    text-transform: uppercase;
+}
+
+.new-game-btn:hover {
+    background-color: #2980b9;
+}
+
+.main-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1a2a3a;
+    color: white;
+    padding: 20px;
+}
+
+@media (max-width: 600px) {
+    .card {
+        padding: 20px;
+    }
+}
