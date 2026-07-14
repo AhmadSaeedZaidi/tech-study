@@ -12,6 +12,9 @@ projects:
 - `http://<your-domain>/bmi_calculator/`
 - `http://<your-domain>/digital_clock/`
 - `http://<your-domain>/guess_the_number/`
+- `http://<your-domain>/counter_app/`
+- `http://<your-domain>/todo_list/`
+- `http://<your-domain>/quiz_app/`
 
 ---
 
