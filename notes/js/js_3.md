@@ -16,6 +16,8 @@ function sayMyName() {
 }
 
 sayMyName()
+// H
+// i
 ```
 
 important difference:
@@ -23,6 +25,8 @@ important difference:
 ```javascript
 sayMyName   // reference only, no execution
 sayMyName() // function executes
+// H
+// i
 ```
 
 ## parameters and arguments:
@@ -36,6 +40,7 @@ function addTwoNumbers(num1, num2) {
 }
 
 addTwoNumbers(3, 5)
+// 8
 ```
 
 `num1` and `num2` are parameters.
@@ -62,6 +67,8 @@ function test() {
 	return "done"
 	console.log("this will never run")
 }
+
+// no output, because test() is not called
 ```
 
 ## missing inputs and edge cases:
@@ -79,6 +86,7 @@ function loginUser(username) {
 }
 
 loginUser()
+// Please enter a username
 ```
 
 you can also use falsy checks to simplify this.
@@ -93,6 +101,9 @@ function loginUser(username) {
 
 	return `${username} just logged in`
 }
+
+loginUser()
+// Please enter a username
 ```
 
 another option is to give the parameter a default value.
@@ -151,6 +162,8 @@ function handleObject(anyObject) {
 
 handleObject(user)
 handleObject({ username: "Sam", price: 399 })
+// Username is Hitesh and price is 199
+// Username is Sam and price is 399
 ```
 
 if you access a property that does not exist, JavaScript returns `undefined`.
@@ -183,6 +196,7 @@ the parameter name is just a local placeholder for the value that is passed in, 
 ## scope in javascript:
 
 scope controls where variables can be accessed in a program.
+it is basically the set of rules that decides which part of the code can see a variable.
 the main keywords to understand here are `let`, `const`, and `var`.
 
 ### 1) the three keywords
@@ -198,8 +212,8 @@ it ignores block boundaries like `if` statements and loops.
 block scope is defined by curly braces, like in an `if` statement or a function.
 variables declared with `let` or `const` inside a block cannot be accessed outside it.
 
-global scope is the area outside any curly braces.
-variables declared there are available throughout the program.
+the global scope is the outermost scope of the program.
+variables declared there can be accessed from nested scopes, but the exact behavior depends on the environment, such as a browser script, a browser module, or node.js.
 
 ### 3) code breakdown and edge cases
 
@@ -218,7 +232,7 @@ if (true) {
 console.log(c) // 30
 ```
 
-variables in the global scope are accessible inside nested blocks, but variables inside blocks stay protected from the outside.
+variables in an outer scope are accessible inside nested blocks, but variables inside blocks stay protected from the outside.
 
 ```javascript
 let a = 300
@@ -229,6 +243,8 @@ if (true) {
 }
 
 console.log('Outer:', a)
+// Inner: 10
+// Outer: 300
 ```
 
 ### 4) key takeaways
@@ -256,14 +272,17 @@ const user = {
 }
 
 user.welcomeMessage()
+// Hitesh, welcome to the website
 ```
 
-at the global level, `this` behaves differently depending on the environment.
-in node.js, it refers to an empty object `{}`.
-in the browser, it refers to the `window` object.
+at the top level, `this` behaves differently depending on the environment.
+in a classic browser script, it refers to the `window` object.
+in a node.js commonjs module, top-level `this` is usually the module's exported object.
+in an es module, top-level `this` is `undefined`.
 
 inside a regular function, `this` refers to the global object in the non-strict case.
-that is why it can expose global features like `fetch` or `performance`.
+in strict mode, `this` is `undefined` when the function is called without an object.
+that is why regular functions can behave differently depending on how they are called.
 
 ### 2) arrow functions
 
@@ -274,6 +293,9 @@ const chai = () => {
 	let username = "Hitesh"
 	console.log(this.username)
 }
+
+chai()
+// undefined in most module contexts
 ```
 
 arrow functions do not have their own `this`.
@@ -287,6 +309,8 @@ if you use curly braces in an arrow function, you must use the `return` keyword 
 const add = (n1, n2) => {
 	return n1 + n2
 }
+
+add(3, 5) // 8
 ```
 
 if you use parentheses, you can return a value implicitly without writing `return`.
@@ -294,6 +318,8 @@ this is useful for short one-line functions.
 
 ```javascript
 const add = (n1, n2) => (n1 + n2)
+
+add(3, 5) // 8
 ```
 
 when returning an object implicitly, wrap the object in parentheses.
@@ -301,6 +327,8 @@ otherwise, the curly braces will be treated as the function body.
 
 ```javascript
 const getObject = () => ({ username: "Hitesh" })
+
+getObject() // { username: "Hitesh" }
 ```
 
 ### key takeaways
@@ -327,6 +355,7 @@ to create an iife, wrap the function in parentheses so javascript treats it as a
 (function chai() {
 	console.log("DB Connected")
 })()
+// DB Connected
 ```
 
 ### variations and rules
@@ -338,6 +367,7 @@ you can also use arrow functions for cleaner syntax.
 (() => {
 	console.log("DB Connected Two")
 })()
+// DB Connected Two
 ```
 
 you can pass arguments into an iife just like any other function.
@@ -346,12 +376,13 @@ you can pass arguments into an iife just like any other function.
 ((name) => {
 	console.log(`DB Connected to ${name}`)
 })("Hitesh")
+// DB Connected to Hitesh
 ```
 
 ### important edge case
 
 when writing multiple iifes in the same file, always end the first one with a semicolon.
-without the semicolon, javascript may not know where one execution context ends and the next begins.
+without the semicolon, javascript may try to treat the second function expression as part of the first statement.
 
 ```javascript
 (function one() {
@@ -361,6 +392,24 @@ without the semicolon, javascript may not know where one execution context ends 
 (function two() {
 	console.log("Two")
 })()
+```
+
+// One
+// TypeError
+// Two does not run
+
+the safer version is:
+
+```javascript
+(function one() {
+	console.log("One")
+})();
+
+(function two() {
+	console.log("Two")
+})()
+// One
+// Two
 ```
 
 ### key takeaways
