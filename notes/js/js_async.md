@@ -39,16 +39,111 @@ so the mental shift is: javascript timers never block. they hand the callback to
 
 ## the event loop lifecycle:
 
-when an async task runs, it moves through this lifecycle:
+the async story has four players plus a manager. it is worth understanding each one before tracing a real request, because the whole model is just these pieces passing work to each other.
 
-1. call stack: the engine encounters the async function.
-2. web api / node api: the task is handed to the browser or node to handle in the background.
-3. task queue: when the background task finishes, its callback moves into a queue.
-4. event loop: it keeps checking if the call stack is empty. if it is, it pushes the first callback from the queue onto the stack.
+### the four players:
 
-the call stack is a stack of currently running function calls. the task queue is a first in, first out line of callbacks waiting to run. the event loop is the manager that moves callbacks from the queue onto the stack when the stack is empty.
+**1. the call stack**
 
-the important guarantee is run-to-completion: a running task can never be interrupted by other javascript. that is why the event loop only moves the next task when the current stack is empty.
+the call stack is a last-in, first-out stack of currently running functions. when you call a function, a new frame is pushed on top. when the function returns, its frame pops off.
+
+```javascript
+function a() {
+	return "a"
+}
+
+function b() {
+	return a()
+}
+
+b()
+```
+
+when `b()` runs, the stack is `[b]`. inside b, `a()` runs, so the stack becomes `[b, a]`. when a returns, it pops, and we are back to `[b]`. when b returns, the stack is empty.
+
+here is the sentence that matters: javascript only executes code sitting on top of the stack. everything below a frame is paused and waiting for the frame above it to finish.
+
+**2. the memory heap**
+
+the heap is unstructured memory where objects and variables actually live. the stack holds small frames and references, the real data sits in the heap. this is the same stack vs heap idea from section 01.
+
+**3. the web apis (or node apis)**
+
+`setTimeout`, `fetch`, `addEventListener`, file reads, these are not part of javascript. the engine borrows them from the host, the browser or node. and crucially, the host does the slow waiting on its own threads, so the main thread is free to keep running.
+
+the timer countdown is not a javascript thing. the browser's internal timer machinery handles it in the background.
+
+**4. the task queue**
+
+when a web api finishes its work, it does not run your callback directly. it drops the callback into a first-in, first-out line called the task queue (also known as the callback queue or macrotask queue). the callback sits there waiting for the event loop to let it in.
+
+### the event loop:
+
+the event loop is the manager that connects these pieces. its job is deceptively simple: it keeps checking one question, is the call stack empty? if yes, take the first callback from the front of the queue and push it onto the stack. if no, keep waiting.
+
+```
+call stack          web api              task queue
++----------+        +----------+         +-----------+
+| main()   |        | setTimeout|         |   cb      |
+| console  |  --->  | (browser |  --->   |   cb      |
+| log      |        |  counts) |         +-----------+
++----------+        +----------+             |
+      ^                                      |
+      |          event loop                  v
+      +-----------(stack empty?)-------------+
+```
+
+### tracing a real timer:
+
+let's follow `setTimeout(cb, 1000)` all the way through.
+
+```javascript
+console.log("start")
+
+setTimeout(() => {
+	console.log("2 seconds passed")
+}, 1000)
+
+console.log("end")
+```
+
+step by step:
+
+1. the whole script is pushed onto the call stack as a task.
+2. `console.log("start")` runs, prints start, pops off.
+3. `setTimeout(cb, 1000)` is called. javascript does not wait here. it hands the callback and the delay to the browser's timer api and moves on immediately.
+4. `console.log("end")` runs, prints end, pops off. now the stack is empty, but the script's task is done.
+5. meanwhile, in the background, the browser is counting down the 1 second on its own thread.
+6. when the timer expires, the browser pushes `cb` into the task queue.
+7. the event loop sees the stack is empty, takes `cb` from the front of the queue, and pushes it onto the stack.
+8. `cb` runs and prints "2 seconds passed".
+
+the key is step 3. javascript hands the timer to the browser and immediately keeps going. that is what makes it non-blocking, and that is why the "end" prints before "2 seconds passed".
+
+### the run-to-completion guarantee:
+
+because the event loop only moves a callback when the stack is empty, a running task can never be interrupted by other javascript. no callback gets cut off halfway through.
+
+```javascript
+setTimeout(() => console.log("first"), 0)
+setTimeout(() => console.log("second"), 0)
+```
+
+both callbacks land in the task queue in order. "first" runs completely, then "second" runs. one task at a time, strictly.
+
+this guarantee is what makes shared state easy to reason about. two pieces of code never touch the same variable at the same time, because nothing on the main thread truly runs in parallel. the concurrency is apparent, not real.
+
+### from my research (mdn):
+
+the spec calls each autonomous executor an "agent", which is roughly one thread. the stack + heap + job queue together are the engine, and the browser/dom apis are the host. the host can genuinely do work in parallel, but the engine runs exactly one javascript job at a time. reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Execution_model
+
+### comparison to cpp and python:
+
+in cpp, there is no built-in event loop. `std::this_thread::sleep_for` blocks, and if you want a "one thread with a callback queue" model you bring in boost::asio or libuv (libuv is literally the loop that powers node). asyncio in python is the closest cousin: one loop, coroutines yield, the loop decides who runs next. the difference is asyncio only interleaves at await points, while javascript interleaves whenever a task finishes and the stack empties.
+
+### key takeaway:
+
+the event loop is a gatekeeper. the stack runs the code, the web apis do the slow waiting off-thread, the queue holds finished callbacks, and the loop lets exactly one callback in whenever the stack is empty. keep that picture in your head and both `setTimeout(0)` ordering and promise priority start to make sense.
 
 ## the setTimeout(0) trap:
 

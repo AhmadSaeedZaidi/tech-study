@@ -81,6 +81,8 @@ so `console.log` is basically a debug tool provided by the host, not a language 
 
 a promise is an object representing the eventual completion or failure of an async operation. it is a placeholder for a value that will be available later.
 
+a useful mental model: think of it like a receipt from a restaurant. you order food, the kitchen takes time, and in the meantime the waiter hands you a receipt. the receipt is not the food, but it is a guarantee that the food is coming. when it is ready, the receipt gets redeemed for the actual dish. if the kitchen runs out, you find out the order failed.
+
 you create one with the `new Promise` constructor, which takes a function with two arguments: `resolve` and `reject`.
 
 ```javascript
@@ -98,11 +100,75 @@ const promise = new Promise((resolve, reject) => {
 
 inside the executor you do the async work, like a db call or network request. when it succeeds, call `resolve(value)`. when it fails, call `reject(error)`.
 
+### interesting: the executor runs immediately
+
+here is a subtle thing most people miss. the executor function, the one you pass to `new Promise`, runs synchronously, right at construction time. it is not deferred.
+
+```javascript
+console.log("1")
+const p = new Promise(() => console.log("2"))
+console.log("3")
+// 1
+// 2
+// 3
+```
+
+"2" prints in the middle, because the executor runs during construction. only the `resolve`/`reject` calls, and the handlers attached with `.then`, are async.
+
+### the three states:
+
 a promise has three states:
 
 - pending: initial state, not settled yet.
 - fulfilled: resolve was called, it has a value.
 - rejected: reject was called, it has an error.
+
+the transitions are one-way:
+
+```
+           resolve(value)
+  pending  --------------->  fulfilled
+
+           reject(error)
+  pending  --------------->  rejected
+```
+
+once a promise leaves pending, it is settled, and it stays that way forever. you cannot go from fulfilled back to pending, and you cannot go from fulfilled to rejected.
+
+### resolve and reject are one-shot:
+
+calling resolve or reject more than once is a no-op. the first call wins.
+
+```javascript
+const p = new Promise((resolve, reject) => {
+	resolve("first")
+	resolve("second") // ignored
+	reject("oops")    // also ignored
+})
+
+p.then((value) => console.log(value))
+// "first"
+```
+
+### what happens to the handlers:
+
+when you call resolve, the promise does not run your `.then` handlers right away. it queues them as microtasks. they only run after the current synchronous code finishes and the call stack empties.
+
+```javascript
+const p = new Promise((resolve) => resolve("done"))
+
+p.then((value) => console.log(value))
+
+console.log("sync")
+// sync
+// done
+```
+
+even though resolve runs before `console.log("sync")`, the `.then` callback prints after it, because the handler is a microtask and microtasks wait for the stack to empty.
+
+### from my research:
+
+the executor's `this` is not the promise itself, and a settled promise ignores any further resolve or reject calls. reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
 
 ### comparison to python and cpp:
 
@@ -130,13 +196,64 @@ promise
 - `.catch()` handles rejection, any error in the chain.
 - `.finally()` runs regardless of success or failure, usually for cleanup.
 
-each of these returns a new promise, which is what makes chaining work.
+### how the chain works:
+
+the key fact is that every `.then()`, `.catch()`, and `.finally()` returns a brand new promise. that is what makes chaining possible. you are not adding handlers to one promise, you are building a pipeline where each promise waits on the one before it.
+
+```
+promise -> .then -> new promise -> .then -> new promise -> .catch -> new promise -> .finally
+```
 
 in the example above, the first `.then` gets the whole user object and returns `user.username`. the second `.then` receives that username and logs it.
 
+### what a handler can return:
+
+what the next link in the chain receives depends on what the handler returns:
+
+- a plain value: the new promise fulfills with that value.
+- a promise: the new promise adopts its state, this is how async values flow down a chain.
+- a thrown error: the new promise rejects with that error.
+
+```javascript
+fetch("/api/user")
+	.then((res) => res.json())      // returns a promise, next .then waits for it
+	.then((data) => data.username)  // plain value, flows into the next handler
+	.catch((err) => console.log(err))
+```
+
+`.json()` returns a promise, so the next `.then` receives the parsed data, not the Response object.
+
+### error propagation:
+
+a rejection skips every following `.then` until it reaches a `.catch`. the error travels down the chain looking for a handler.
+
+```javascript
+promise
+	.then((user) => user.username)
+	.then((username) => console.log(username)) // skipped if the first rejects
+	.catch((err) => console.log(err))          // the rejection lands here
+	.finally(() => console.log("done"))        // always runs
+```
+
+one gotcha: a handler that returns normally "recovers" the chain. if you want the chain to stay in an error state, you have to re-throw inside the handler.
+
+### .catch and .finally are sugar:
+
+`.catch(onRejected)` is just `.then(undefined, onRejected)`. and `.finally(cb)` runs its callback when the promise settles either way, but it passes through the value or error it received, its own return value is ignored.
+
+```javascript
+promise
+	.finally(() => cleanup())
+	.then((value) => console.log(value)) // still receives the original value
+```
+
+### unhandled rejection:
+
+if a promise rejects and nothing catches it, you get an unhandled rejection. the browser fires an `unhandledrejection` event, node logs a warning and can even crash. that is why the video always attaches a `.catch()` or wraps the code in try/catch.
+
 ### from my research:
 
-`.catch()` is just sugar for `.then(undefined, onRejected)`. and `.finally()` passes through whatever value or error it received, its own return value is ignored. reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/finally
+each `.then` queues its own microtask, so a chain is not atomic, each link settles in its own turn of the event loop. reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/then
 
 ## async/await:
 
@@ -157,6 +274,56 @@ consumePromise()
 
 `await` pauses the function until the promise settles, without blocking the event loop. if the promise rejects, await throws, so you wrap it in try/catch.
 
+### async functions always return a promise:
+
+this is the part that surprises people. even a simple async function that returns a plain value wraps it in a promise.
+
+```javascript
+async function sayHi() {
+	return "hi"
+}
+
+sayHi() // Promise { "hi" }
+sayHi().then((value) => console.log(value)) // hi
+```
+
+so you can never read the return value directly. you have to `await` it or use `.then`, because the function always hands you a promise back.
+
+### the await suspension:
+
+when the function hits `await`, it suspends without blocking. the event loop keeps running other code while it waits. when the awaited promise settles, the rest of the function continues as a microtask.
+
+```javascript
+async function showDate() {
+	const response = await fetch("/api/date")
+	const date = await response.json() // second await, same suspension idea
+	console.log(date)
+}
+```
+
+each `await` in a row suspends and resumes in its own turn. that is why async code that reads like synchronous code is actually a chain of microtask hops under the hood.
+
+### try/catch is the only error net:
+
+there is no `.catch()` to append to an `await`. if the awaited promise rejects, the exception is thrown at the `await` line, and it is only caught by the surrounding try/catch.
+
+```javascript
+async function load() {
+	try {
+		const response = await fetch("/api/data")
+		if (!response.ok) {
+			throw new Error(`HTTP error: ${response.status}`)
+		}
+		const data = await response.json()
+		console.log(data)
+	} catch (error) {
+		console.log("something failed", error)
+	}
+}
+```
+
+if you skip the try/catch entirely, the rejection becomes an unhandled rejection, same as a missing `.catch()` in a chain.
+
 ### comparison to python:
 
 this is almost identical to python's async/await. `async function` is `async def`, `await` is `await`, try/catch is try/except. the main difference is that in python you explicitly create a task with `asyncio.create_task()` to get concurrency, while javascript's promise is already scheduled by the engine.
@@ -164,6 +331,173 @@ this is almost identical to python's async/await. `async function` is `async def
 ### from my research:
 
 an async function always returns a promise, even if you just `return 5`. and the part of an async function after an `await` runs as a microtask, which is why promises can interleave with timer callbacks. reference: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/async_function
+
+## generators and yield:
+
+generators are functions that can pause and resume. they are not technically part of the async story, but they tie into it directly, because async/await is built on top of generators plus promises. it is worth understanding them to see what `await` is really doing.
+
+### the basics:
+
+a generator function is declared with `function*`, and it uses the `yield` keyword to pause.
+
+```javascript
+function* counter() {
+	yield 1
+	yield 2
+	yield 3
+}
+```
+
+the interesting part: calling a generator function does not run its body. it just returns a generator object. the body stays frozen until you ask for the next value.
+
+```javascript
+const gen = counter()
+gen.next() // { value: 1, done: false }
+gen.next() // { value: 2, done: false }
+gen.next() // { value: 3, done: false }
+gen.next() // { value: undefined, done: true }
+```
+
+`next()` resumes the body until the next `yield`, then pauses again. it returns an object with two fields: `value`, the thing that was yielded, and `done`, whether the generator finished. once `done` is true, every further `next()` returns `{ value: undefined, done: true }`.
+
+### you can pass values back in:
+
+this is the part that makes generators different from plain functions. `next(value)` sends a value back into the generator, and that value becomes the result of the suspended `yield` expression.
+
+```javascript
+function* log() {
+	const a = yield
+	console.log(a)
+}
+
+const gen = log()
+gen.next()          // prime it, the first next cannot send a value
+gen.next("pretzel") // a === "pretzel"
+```
+
+the first `next()` cannot carry a useful value, because there is no suspended `yield` yet to receive it. so the pattern is: prime once, then feed values.
+
+this makes generators bidirectional. the caller pushes values in with `next(value)`, and the generator pushes values out with `yield`.
+
+### generators are iterables:
+
+because generators follow the iterator protocol, they work everywhere iterables work.
+
+```javascript
+for (const x of counter()) {
+	console.log(x)
+}
+// 1
+// 2
+// 3
+
+[...counter()]     // [1, 2, 3]
+Array.from(counter()) // [1, 2, 3]
+```
+
+### lazy and infinite sequences:
+
+generators produce values lazily, one at a time, only when `next()` is called. nothing is computed in advance. that is why you can write an infinite sequence without blowing up memory.
+
+```javascript
+function* count() {
+	let i = 0
+	while (true) {
+		yield i++
+	}
+}
+
+const gen = count()
+gen.next().value // 0
+gen.next().value // 1
+```
+
+danger: spreading or Array.from on an infinite generator hangs forever, because it keeps asking for values that never run out.
+
+### the async/await connection:
+
+here is the payoff. before native async/await existed, people wrote generators that `yield` promises, and a driver function that resumed the generator when each promise settled. that driver is exactly what `co` (a famous library) did, and it is what async/await is sugar for.
+
+```javascript
+function run(genFunc) {
+	const it = genFunc()
+
+	function step(value) {
+		const { value: yielded, done } = it.next(value)
+		if (done) return Promise.resolve(yielded)
+		return Promise.resolve(yielded).then(step)
+	}
+
+	return step()
+}
+
+function* fetchUser(id) {
+	const user = yield fetch(`/users/${id}`) // yields a promise
+	const posts = yield fetch(`/users/${id}/posts`)
+	return { user, posts }
+}
+
+run(fetchUser).then((data) => console.log(data))
+```
+
+the `step` function calls `next()`, gets the yielded promise, and attaches a `.then` that resumes the generator with the resolved value. each `yield` pauses like an `await`, and the promise resumes it when settled.
+
+now rewrite that same idea with async/await and you can see they are the same shape:
+
+```javascript
+async function fetchUser(id) {
+	const user = await fetch(`/users/${id}`)
+	const posts = await fetch(`/users/${id}/posts`)
+	return { user, posts }
+}
+```
+
+### yield vs await:
+
+| | `yield` (generator) | `await` (async function) |
+| :--- | :--- | :--- |
+| what it suspends | a generator function | an async function |
+| what resumes it | the caller's next `next(value)`, you choose | the promise settling |
+| what it yields | any value you want | a promise to wait on |
+| direction | bidirectional, caller can push values in | one-way, the result comes back from the promise |
+
+### where they run:
+
+generators do not create threads. a suspended generator just saves its execution context, the local variables and the current position, and releases the stack. the event loop stays free until `next()` is called again. same single-threaded story as everything else in this section.
+
+### from my research:
+
+the transpiled output of async functions (babel's regenerator, typescript's `__awaiter` helper) is literally a generator-based state machine. and mdn notes that generators were once the main way to avoid callback hell before promises and async/await took over. references: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Iterators_and_generators and https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/yield
+
+### modern usage:
+
+generators are not just history. redux-saga uses them for side-effect orchestration, and async generators (`async function*` with `for await...of`) are used for streaming data where each `yield` can await.
+
+```javascript
+async function* pages(url) {
+	let next = url
+	while (next) {
+		const response = await fetch(next)
+		const data = await response.json()
+		yield data.items
+		next = data.next
+	}
+}
+
+for await (const items of pages("/api/list")) {
+	render(items)
+}
+```
+
+### comparison to python and cpp:
+
+generators in python are nearly identical. `def` with `yield`, `next()`, and `generator.send(value)` is the exact equivalent of `next(value)` in javascript. `yield from` in python is the same as `yield*` delegation in javascript.
+
+cpp has no direct equivalent. the closest ideas are ranges/views or manually written lazy iterators, and c++20 coroutines with `co_yield`, which is the same suspension concept but a lot more machinery.
+
+### key takeaway:
+
+`yield` pauses a generator, `await` pauses an async function, and async/await was literally built on the pattern of generators yielding promises. so when you see `await`, you can picture a generator pausing and a hidden driver resuming it when the promise settles.
 
 ## fetch:
 
@@ -179,6 +513,28 @@ fetch("https://api.github.com/users/hiteshchoudhary")
 	})
 	.catch((error) => console.log(error))
 ```
+
+### how fetch works internally:
+
+the video explains that calling fetch starts two parallel processes:
+
+- process a: reserves space in memory for the `.then` handlers (the onFulfilled and onRejected callbacks) that will be attached later.
+- process b: actually makes the network request through the browser or node environment.
+
+both start at the same time. the memory for the handlers is set up immediately, while the network request runs in the background. that is why fetch returns a promise so fast, the response data is not there yet, but the machinery to receive it is already in place.
+
+### fetch uses the microtask queue:
+
+fetch responses are delivered through the microtask queue, not the normal task queue. that is why a fetch `.then` can beat a `setTimeout(..., 0)` that was registered earlier.
+
+```javascript
+setTimeout(() => console.log("timer"), 0)
+fetch("/api/data").then(() => console.log("fetch"))
+
+// fetch runs first, because its handler is a microtask
+```
+
+this is the same priority rule from section 08. the microtask queue drains before the task queue.
 
 ### the 404 trap:
 
@@ -257,6 +613,8 @@ the old xhr approach led to callback hell and required tracking readyState manua
 
 the video mentions promise.all at the end with the note "kuch reading aap b kro", so here is my reading.
 
+promise.all takes an array of promises and resolves when all of them resolve, returning an array of their values in order.
+
 ```javascript
 const [users, posts] = await Promise.all([
 	fetch("https://api.example.com/users"),
@@ -264,7 +622,9 @@ const [users, posts] = await Promise.all([
 ])
 ```
 
-promise.all takes an array of promises and resolves when all of them resolve, returning an array of their values in order.
+the destructuring line is a nice trick. promise.all returns one array, and you unpack the results into named variables in one go.
+
+the big win is concurrency. the two fetches start at the same time instead of waiting for each other. if you wrote them with two separate awaits back to back, the second fetch would not start until the first finished.
 
 ### edge case:
 
@@ -275,9 +635,32 @@ const results = await Promise.allSettled([p1, p2, p3])
 // [{status: "fulfilled", value: ...}, {status: "rejected", reason: ...}]
 ```
 
+allSettled never rejects. it waits for everything to finish and reports each outcome, whether it succeeded or failed.
+
+### the other combinators:
+
+- `Promise.race()`: resolves or rejects with the first promise to settle, whichever comes first. this is the classic way to implement a timeout.
+- `Promise.any()`: resolves with the first promise to fulfill. it ignores early rejections, and only rejects if every promise rejects.
+
+```javascript
+// timeout pattern with race
+Promise.race([
+	fetch("/api/data"),
+	new Promise((_, reject) =>
+		setTimeout(() => reject(new Error("timed out")), 5000)
+	),
+])
+```
+
+if the fetch takes longer than 5 seconds, the timeout promise rejects first and race reports the timeout.
+
 ### from my research:
 
-there are four combinators. `Promise.all` for all-or-nothing, `Promise.allSettled` for every outcome, `Promise.race` for the first to settle, and `Promise.any` for the first to fulfill. `race` is the classic way to implement a timeout. references: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all and https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+the four combinators all take an iterable of promises: `all` for all-or-nothing, `allSettled` for every outcome, `race` for the first to settle, `any` for the first to fulfill. non-promise values in the array just pass through as-is. references: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/all and https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise/allSettled
+
+### comparison to python:
+
+python's `asyncio.gather()` is the closest match to `Promise.all`, it runs multiple coroutines concurrently and collects their results. `asyncio.wait()` with return_when is more like race or allSettled.
 
 ## key takeaways:
 
